@@ -122,8 +122,7 @@ public class PowerShell implements AutoCloseable {
     //Use Powershell command '$PID' in order to recover the process identifier
     private int getPID(BufferedReader reader) throws IOException {
         this.commandWriter.println("$pid");
-        String commandOutput = reader.readLine();
-        commandOutput = commandOutput.replaceAll("\\D", "");
+        String commandOutput = reader.readLine().replaceAll("\\D", "");
         if (!commandOutput.isEmpty()) {
             return Integer.parseInt(commandOutput);
         }

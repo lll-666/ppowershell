@@ -38,7 +38,6 @@ public class TestPS {
     public void testListProcesses() throws IOException {
         HashMap<String, String> head = new HashMap<>();
         head.put("testListProcesses","testListProcesses");
-        PowerShell powerShell = PowerShell.openProcess();
         powerShell.executeScript(head,"Get-Process");
         try {
             Thread.sleep(1000);
@@ -49,7 +48,6 @@ public class TestPS {
 
     @Test
     public void testCheckBIOSByWMI() throws IOException {
-        PowerShell powerShell = PowerShell.openProcess();
         powerShell.executeScript("Get-WmiObject Win32_BIOS");
         try {
             Thread.sleep(1000);
@@ -60,7 +58,6 @@ public class TestPS {
 
     @Test
     public void testCheckEmptyResponse() throws IOException {
-        PowerShell powerShell = PowerShell.openProcess();
         powerShell.executeScript("Get-WmiObject Win32_1394Controller");
         try {
             Thread.sleep(1000);
@@ -71,7 +68,6 @@ public class TestPS {
 
     @Test
     public void testLongCommand() throws IOException {
-        PowerShell powerShell = PowerShell.openProcess();
         powerShell.executeScript("Get-WMIObject -List | Where{$_.name -match \"^Win32_\"} | Sort Name");
         try {
             Thread.sleep(1000);
@@ -82,7 +78,6 @@ public class TestPS {
 
     @Test
     public void testErrorCase() throws IOException {
-        PowerShell powerShell = PowerShell.openProcess();
         powerShell.executeScript("sfdsfdsf");
         try {
             Thread.sleep(1000);
@@ -93,7 +88,6 @@ public class TestPS {
 
     @Test
     public void testMultipleCalls() throws IOException {
-        PowerShell powerShell = PowerShell.openProcess();
         powerShell.executeScript("dir");
         powerShell.executeScript("Get-Process");
         powerShell.executeScript("Get-WmiObject Win32_BIOS");
