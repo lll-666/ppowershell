@@ -134,9 +134,12 @@ public class PowerShell implements AutoCloseable {
         checkState();
         commandWriter.println(command);
     }
+    public void executeScript( String commandStr) {
+        executeScript(null,commandStr);
+    }
 
     public void executeScript(Map<String, String> head, String commandStr) {
-        //0. Create temporary file
+        //1. Create temporary file
         File tmpFile;
         try {
             tmpFile = File.createTempFile("psscript_" + new Date().getTime(), ".ps1", this.tempFolder);
@@ -148,7 +151,7 @@ public class PowerShell implements AutoCloseable {
             return;
         }
 
-        //1. Put the temporary file absolute path in the header
+        //2. Put the temporary file absolute path in the header
         String absolutePath = tmpFile.getAbsolutePath();
         String name = tmpFile.getName();
         if (head == null) {
@@ -156,7 +159,7 @@ public class PowerShell implements AutoCloseable {
         }
         head.put(name, absolutePath);
 
-        //2. Writing scripts to temporary files
+        //3. Writing scripts to temporary files
         try (BufferedReader srcReader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(commandStr.getBytes())));
              BufferedWriter tmpWriter = new BufferedWriter(new FileWriter(tmpFile))) {
             tmpWriter.write('"' + START_SCRIPT_STRING + '"');
@@ -178,10 +181,10 @@ public class PowerShell implements AutoCloseable {
             return;
         }
 
-        //3. Cache the script header information and associate the file name information
+        //4. Cache the script header information and associate the file name information
         headCache.put(name, head);
 
-        //4. Write commands to the PowerShell process
+        //5. Write commands to the PowerShell process
         executeCommand(absolutePath);
     }
 
