@@ -1,1 +1,1 @@
-to be improved
+使用java创建Powershell进程环境，用于基于powershell环境的windows终端通信和管控。
