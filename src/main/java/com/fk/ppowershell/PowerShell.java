@@ -15,7 +15,6 @@ import java.util.logging.Logger;
 public class PowerShell implements AutoCloseable {
     //Declare logger
     private static final Logger logger = Logger.getLogger(PowerShell.class.getName());
-    private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");
     // Process to store PowerShell process
     private Process p;
     //PID of the process
@@ -78,7 +77,7 @@ public class PowerShell implements AutoCloseable {
     public static PowerShell openProcess(String pSExecutablePath, Supplier<OperationService[]> supplier) throws IOException {
         PowerShell powerShell = new PowerShell();
         powerShell.configuration(null);
-        String executablePath = pSExecutablePath != null ? pSExecutablePath : IS_WINDOWS ? "powershell.exe" : "pwsh.exe";
+        String executablePath = pSExecutablePath != null ? pSExecutablePath : Constant.IS_WINDOWS ? "powershell.exe" : "pwsh.exe";
         PowerShell initialize = powerShell.initialize(executablePath);
         OperationServiceManager.loadOperationServiceImpl(supplier.get());
         return initialize;
@@ -92,7 +91,7 @@ public class PowerShell implements AutoCloseable {
         String codePage = PowerShellCodepage.getIdentifierByCodePageName(Charset.defaultCharset().name());
         //Start powershell executable in process
         ProcessBuilder pb;
-        if (IS_WINDOWS) {
+        if (Constant.IS_WINDOWS) {
             pb = new ProcessBuilder("cmd.exe", "/c", "chcp", codePage, ">", "NUL", "&", pSExecutePath, "-ExecutionPolicy", "Bypass", "-NoExit", "-NoProfile", "-Command", "-");
         } else {
             pb = new ProcessBuilder(pSExecutePath, "-nologo", "-noexit", "-Command", "-");
