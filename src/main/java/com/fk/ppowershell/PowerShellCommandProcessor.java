@@ -67,7 +67,7 @@ class PowerShellCommandProcessor implements Runnable {
     }
 
     private void readData() throws IOException {
-        isContinueReady();
+        waitingToReadData();
         String line;
         while (null != (line = this.reader.readLine())) {
             if (line.equals(PowerShell.START_SCRIPT_STRING)) {
@@ -82,7 +82,7 @@ class PowerShellCommandProcessor implements Runnable {
                     }
                 }
             }
-            isContinueReady();
+            waitingToReadData();
         }
     }
 
@@ -113,17 +113,11 @@ class PowerShellCommandProcessor implements Runnable {
         }
     }
 
-    private void isContinueReady() throws IOException {
+    private void waitingToReadData() throws IOException {
         try {
-            while (true) {
-                if (!this.reader.ready()) {
-                    Thread.sleep(5);
-                } else {
-                    break;
-                }
-            }
+            while (!this.reader.ready()) Thread.sleep(5);
         } catch (InterruptedException ex) {
-            logger.warning("Interrupted! , Interrupt the current thread");
+            logger.warning("Interrupt blocking ! , Restore interrupted state");
             Thread.currentThread().interrupt();
         }
     }

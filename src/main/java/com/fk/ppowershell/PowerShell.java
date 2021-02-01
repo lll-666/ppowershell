@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -20,9 +19,9 @@ public class PowerShell implements AutoCloseable {
     // Process to store PowerShell process
     private Process p;
     //PID of the process
-    private long pid = -1;
+    long pid = -1;
     // Writer to send commands
-    private PrintWriter commandWriter;
+    PrintWriter commandWriter;
     //process state
     private boolean closed = false;
     // Config values
@@ -35,6 +34,10 @@ public class PowerShell implements AutoCloseable {
     static final String START_SCRIPT_STRING = "--START-JPOWERSHELL-SCRIPT--";
 
     private PowerShell() {
+    }
+
+    public Process getP() {
+        return p;
     }
 
     public void configuration(Map<String, String> config) {
@@ -108,33 +111,21 @@ public class PowerShell implements AutoCloseable {
         }
 
         this.commandWriter = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
         //Getting processes from the PowerShell environment
-        this.pid = getPID(reader);
-
         headCache = new ConcurrentHashMap<>(headCacheInitialCapacity);
-        //Prepare writer that will be used to send commands to powershell
-        CompletableFuture.runAsync(() -> new PowerShellCommandProcessor(reader, isAsync, headCache).run());
+        //Start the powershell processor
+        new Thread(new PowerShellCommandProcessor(this, isAsync, headCache)).start();
         //Get and store the PID of the process
         return this;
-    }
-
-    //Use Powershell command '$PID' in order to recover the process identifier
-    private int getPID(BufferedReader reader) throws IOException {
-        this.commandWriter.println("$pid");
-        String commandOutput = reader.readLine().replaceAll("\\D", "");
-        if (!commandOutput.isEmpty()) {
-            return Integer.parseInt(commandOutput);
-        }
-        return -1;
     }
 
     private void executeCommand(String command) {
         checkState();
         commandWriter.println(command);
     }
-    public void executeScript( String commandStr) {
-        executeScript(null,commandStr);
+
+    public void executeScript(String commandStr) {
+        executeScript(null, commandStr);
     }
 
     public void executeScript(Map<String, String> head, String commandStr) {
@@ -164,10 +155,6 @@ public class PowerShell implements AutoCloseable {
             tmpWriter.write('"' + START_SCRIPT_STRING + '"');
             tmpWriter.newLine();
             tmpWriter.write('"' + name + '"');
-            tmpWriter.newLine();
-            String impl = head.remove("IMPL");
-            impl = impl == null ? "defaultImpl" : impl;
-            tmpWriter.write('"' + impl + '"');
             tmpWriter.newLine();
             String line;
             while ((line = srcReader.readLine()) != null) {
