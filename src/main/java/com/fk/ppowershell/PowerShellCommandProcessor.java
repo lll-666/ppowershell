@@ -3,6 +3,7 @@ package com.fk.ppowershell;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -10,7 +11,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class PowerShellCommandProcessor{
+class PowerShellCommandProcessor implements Runnable {
     private static final Logger logger = Logger.getLogger(PowerShellCommandProcessor.class.getName());
     private static final String CRLF = "\r\n";
     private final BufferedReader reader;
@@ -18,11 +19,26 @@ class PowerShellCommandProcessor{
     private final Map<String, Map<String, String>> headCache;
     private int retryTimes;
     private LocalDateTime baseTime;
+    private final PowerShell powerShell;
 
-    public PowerShellCommandProcessor(BufferedReader reader, boolean isAsync, Map<String, Map<String, String>> headCache) {
-        this.reader = reader;
+    public PowerShellCommandProcessor(PowerShell powerShell, boolean isAsync, Map<String, Map<String, String>> headCache) throws IOException {
         this.isAsync = isAsync;
         this.headCache = headCache;
+        this.powerShell = powerShell;
+        this.reader = new BufferedReader(new InputStreamReader(powerShell.getP().getInputStream()));
+        powerShell.pid = getPID(reader);
+    }
+
+    //Use Powershell command '$PID' in order to recover the process identifier
+    private int getPID(BufferedReader reader) throws IOException {
+        powerShell.commandWriter.println("$pid");
+        String commandOutput = reader.readLine().replaceAll("\\D", "");
+        if (commandOutput.equals("65001") || commandOutput.equals("936") || commandOutput.equals("437"))
+            commandOutput = reader.readLine().replaceAll("\\D", "");
+        if (!commandOutput.isEmpty()) {
+            return Integer.parseInt(commandOutput);
+        }
+        return -1;
     }
 
     public void run() {
@@ -37,7 +53,7 @@ class PowerShellCommandProcessor{
             }
             if (baseTime.isAfter(LocalDateTime.now().minusSeconds(60))) {
                 if (++retryTimes > 10) {
-                    logger.log(Level.SEVERE,"Retry more than 10 times in 1 minute, exit execution",e);
+                    logger.log(Level.SEVERE, "Retry more than 10 times in 1 minute, exit execution", e);
                     throw e;
                 }
             } else {
@@ -56,11 +72,10 @@ class PowerShellCommandProcessor{
         while (null != (line = this.reader.readLine())) {
             if (line.equals(PowerShell.START_SCRIPT_STRING)) {
                 String headFlag = this.reader.readLine();
-                String implFlag = this.reader.readLine();
                 StringBuilder body = new StringBuilder();
                 while (null != (line = this.reader.readLine())) {
                     if (line.equals(PowerShell.END_SCRIPT_STRING)) {
-                        handCommandOutput(headFlag, implFlag, body);
+                        handCommandOutput(headFlag, body);
                         break;
                     } else {
                         body.append(line).append(CRLF);
@@ -71,16 +86,22 @@ class PowerShellCommandProcessor{
         }
     }
 
-    private void handCommandOutput(String headFlag, String implFlag, StringBuilder bodySb) {
-        OperationService operationService = OperationServiceManager.getOperationImpl().get(implFlag);
+    private void handCommandOutput(String headFlag, StringBuilder body) {
         Map<String, String> head = headCache.remove(headFlag);
+        if (head == null) {
+            logger.log(Level.WARNING, "[{}] is not in head !", headFlag);
+            return;
+        }
+
         deleteTmpFile(head.remove(headFlag));
+
+        OperationService operationService = OperationServiceManager.getOperationImpl().get(head.remove("IMPL"));
         if (operationService == null) {
-            OperationService.defaultProcess(head, bodySb.toString());
+            OperationService.defaultProcess(head, body.toString());
         } else if (isAsync) {
-            operationService.processAsync(head, bodySb.toString());
+            operationService.processAsync(head, body.toString());
         } else {
-            operationService.process(head, bodySb.toString());
+            operationService.process(head, body.toString());
         }
     }
 

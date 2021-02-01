@@ -67,16 +67,6 @@ public class TestPS {
     }
 
     @Test
-    public void testLongCommand() throws IOException {
-        powerShell.executeScript("Get-WMIObject -List | Where{$_.name -match \"^Win32_\"} | Sort Name");
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
     public void testErrorCase() throws IOException {
         powerShell.executeScript("sfdsfdsf");
         try {
