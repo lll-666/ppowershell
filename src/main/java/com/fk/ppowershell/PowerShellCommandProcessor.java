@@ -41,12 +41,12 @@ class PowerShellCommandProcessor implements Runnable {
         return -1;
     }
 
-    public void run() {
+    public void run(){
         try {
             readData();
         } catch (IOException e) {
             logger.warning("Unexpected error reading PowerShell output , Process suicide ");
-            Thread.currentThread().interrupt();
+            powerShell.close();
         } catch (Exception e) {
             if (baseTime == null) {
                 baseTime = LocalDateTime.now();
