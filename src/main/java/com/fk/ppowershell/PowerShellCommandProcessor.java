@@ -115,7 +115,7 @@ class PowerShellCommandProcessor implements Runnable {
 
     private void waitingToReadData() throws IOException {
         try {
-            while (!this.reader.ready()) Thread.sleep(5);
+            while (!this.reader.ready()) Thread.sleep(50);
         } catch (InterruptedException ex) {
             logger.warning("Interrupt blocking ! , Restore interrupted state");
             Thread.currentThread().interrupt();
