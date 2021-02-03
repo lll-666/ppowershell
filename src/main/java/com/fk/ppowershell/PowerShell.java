@@ -12,6 +12,9 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.fk.ppowershell.Constant.END_SCRIPT_STRING;
+import static com.fk.ppowershell.Constant.START_SCRIPT_STRING;
+
 public class PowerShell implements AutoCloseable {
     //Declare logger
     private static final Logger logger = Logger.getLogger(PowerShell.class.getName());
@@ -29,9 +32,6 @@ public class PowerShell implements AutoCloseable {
     private Map<String, Map<String, String>> headCache;
     private Integer headCacheInitialCapacity;
     private File tempFolder;
-    static final String END_SCRIPT_STRING = "--END-JPOWERSHELL-SCRIPT--";
-    static final String START_SCRIPT_STRING = "--START-JPOWERSHELL-SCRIPT--";
-
     private PowerShell() {
     }
 

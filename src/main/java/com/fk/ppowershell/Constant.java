@@ -1,9 +1,12 @@
 package com.fk.ppowershell;
 
-class Constant {
-    static final String TEMP_FOLDER ="tempFolder";
-    static final String IS_ASYNC ="isAsync";
-    static final String HEAD_CACHE_INITIAL_CAPACITY ="headCacheInitialCapacity";
-    static final String START_PROCESS_WAIT_TIME ="startProcessWaitTime";
-    static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");
+public interface Constant {
+    String TEMP_FOLDER = "tempFolder";
+    String IS_ASYNC = "isAsync";
+    String HEAD_CACHE_INITIAL_CAPACITY = "headCacheInitialCapacity";
+    String START_PROCESS_WAIT_TIME = "startProcessWaitTime";
+    boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");
+    String IMPL = "IMPL";
+    String END_SCRIPT_STRING = "--END-JPOWERSHELL-SCRIPT--";
+    String START_SCRIPT_STRING = "--START-JPOWERSHELL-SCRIPT--";
 }

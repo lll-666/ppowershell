@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.fk.ppowershell.Constant.IMPL;
+
 class PowerShellCommandProcessor implements Runnable {
     private static final Logger logger = Logger.getLogger(PowerShellCommandProcessor.class.getName());
     private static final String CRLF = "\r\n";
@@ -70,11 +72,11 @@ class PowerShellCommandProcessor implements Runnable {
         waitingToReadData();
         String line;
         while (null != (line = this.reader.readLine())) {
-            if (line.equals(PowerShell.START_SCRIPT_STRING)) {
+            if (line.equals(Constant.START_SCRIPT_STRING)) {
                 String headFlag = this.reader.readLine();
                 StringBuilder body = new StringBuilder();
                 while (null != (line = this.reader.readLine())) {
-                    if (line.equals(PowerShell.END_SCRIPT_STRING)) {
+                    if (line.equals(Constant.END_SCRIPT_STRING)) {
                         handCommandOutput(headFlag, body);
                         break;
                     } else {
@@ -95,7 +97,7 @@ class PowerShellCommandProcessor implements Runnable {
 
         deleteTmpFile(head.remove(headFlag));
 
-        OperationService operationService = OperationServiceManager.getOperationImpl().get(head.remove("IMPL"));
+        OperationService operationService = OperationServiceManager.getOperationImpl().get(head.remove(IMPL));
         if (operationService == null) {
             OperationService.defaultProcess(head, body.toString());
         } else if (isAsync) {
