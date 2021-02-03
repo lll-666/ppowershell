@@ -33,7 +33,7 @@ class PowerShellCommandProcessor implements Runnable {
     private int getPID(BufferedReader reader) throws IOException {
         powerShell.commandWriter.println("$pid");
         String commandOutput = reader.readLine().replaceAll("\\D", "");
-        if (commandOutput.equals("65001") || commandOutput.equals("936") || commandOutput.equals("437"))
+        if ("65001".equals(commandOutput) || "936".equals(commandOutput) || "437".equals(commandOutput))
             commandOutput = reader.readLine().replaceAll("\\D", "");
         if (!commandOutput.isEmpty()) {
             return Integer.parseInt(commandOutput);

@@ -44,4 +44,17 @@
     <name>PPowerShell</name>
     <description>API to use PowerShell from Java</description>
     <url>https://github.com/lll-666/ppowershell</url>
+
+    <distributionManagement>
+        <repository>
+            <id>nexus_release</id>
+            <name>release</name>
+            <url>http://localhost:8081/repository/maven-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>nexus_snapshots</id>
+            <name>snapshots</name>
+            <url>http://localhost:8081/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
