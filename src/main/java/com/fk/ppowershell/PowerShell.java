@@ -24,8 +24,8 @@ public class PowerShell implements AutoCloseable {
     //process state
     private boolean closed = false;
     // Config values
-    private Integer startProcessWaitTime;
-    private Boolean isAsync;
+    private Integer startProcessWaitTime = 1;
+    private Boolean isAsync = false;
     private Map<String, Map<String, String>> headCache;
     private Integer headCacheInitialCapacity;
     private File tempFolder;
@@ -35,7 +35,7 @@ public class PowerShell implements AutoCloseable {
     private PowerShell() {
     }
 
-    public Process getP() {
+    Process getP() {
         return p;
     }
 
@@ -54,8 +54,7 @@ public class PowerShell implements AutoCloseable {
             this.startProcessWaitTime = Integer.parseInt(config.get(Constant.START_PROCESS_WAIT_TIME) != null ? config.get(Constant.START_PROCESS_WAIT_TIME)
                     : properties.getProperty(Constant.START_PROCESS_WAIT_TIME));
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Could not read configuration. Using default values.");
-            throw e;
+            logger.log(Level.WARNING, "Could not read configuration. Using default values . the reason is {0}", e.getMessage());
         }
     }
 
@@ -77,7 +76,7 @@ public class PowerShell implements AutoCloseable {
     public static PowerShell openProcess(String pSExecutablePath, Supplier<OperationService[]> supplier) throws IOException {
         PowerShell powerShell = new PowerShell();
         powerShell.configuration(null);
-        String executablePath = pSExecutablePath != null ? pSExecutablePath : Constant.IS_WINDOWS ? "powershell.exe" : "pwsh.exe";
+        String executablePath = pSExecutablePath != null && pSExecutablePath.length() > 0 ? pSExecutablePath : Constant.IS_WINDOWS ? "powershell.exe" : "pwsh.exe";
         PowerShell initialize = powerShell.initialize(executablePath);
         OperationServiceManager.loadOperationServiceImpl(supplier.get());
         return initialize;
@@ -179,8 +178,7 @@ public class PowerShell implements AutoCloseable {
             try {
                 commandWriter.println("exit");
                 if (this.pid > 0) {
-                    //If it can be closed, force kill the process
-                    logger.info("Forcing PowerShell to close. PID: " + this.pid);
+                    logger.log(Level.INFO, "Forcing PowerShell to close. PID: {0}", this.pid);
                     try {
                         Runtime.getRuntime().exec("taskkill.exe /PID " + pid + " /F /T");
                         this.closed = true;
