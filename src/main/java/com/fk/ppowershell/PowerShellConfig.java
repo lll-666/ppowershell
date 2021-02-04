@@ -31,7 +31,7 @@ final class PowerShellConfig {
                     try {
                         config.load(PowerShellConfig.class.getClassLoader().getResourceAsStream("pps.properties"));
                     } catch (IOException e) {
-                        Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Cannot read config values from file : pps.properties", e);
+                        Logger.getLogger(PowerShellAyn.class.getName()).log(Level.SEVERE, "Cannot read config values from file : pps.properties", e);
                     }
                 }
             }

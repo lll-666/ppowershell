@@ -13,27 +13,27 @@ import java.util.logging.Logger;
 
 import static com.fk.ppowershell.Constant.IMPL;
 
-class PowerShellCommandProcessor implements Runnable {
-    private static final Logger logger = Logger.getLogger(PowerShellCommandProcessor.class.getName());
+class PowerShellCommandProcessorAsy implements Runnable {
+    private static final Logger logger = Logger.getLogger(PowerShellCommandProcessorAsy.class.getName());
     private static final String CRLF = "\r\n";
     private final BufferedReader reader;
     private final boolean isAsync;
     private final Map<String, Map<String, String>> headCache;
     private int retryTimes;
     private LocalDateTime baseTime;
-    private final PowerShell powerShell;
+    private final PowerShellAyn powerShellAyn;
 
-    public PowerShellCommandProcessor(PowerShell powerShell, boolean isAsync, Map<String, Map<String, String>> headCache) throws IOException {
+    public PowerShellCommandProcessorAsy(PowerShellAyn powerShellAyn, boolean isAsync, Map<String, Map<String, String>> headCache) throws IOException {
         this.isAsync = isAsync;
         this.headCache = headCache;
-        this.powerShell = powerShell;
-        this.reader = new BufferedReader(new InputStreamReader(powerShell.getP().getInputStream()));
-        powerShell.pid = getPID(reader);
+        this.powerShellAyn = powerShellAyn;
+        this.reader = new BufferedReader(new InputStreamReader(powerShellAyn.getP().getInputStream()));
+        powerShellAyn.pid = getPID(reader);
     }
 
     //Use Powershell command '$PID' in order to recover the process identifier
     private int getPID(BufferedReader reader) throws IOException {
-        powerShell.commandWriter.println("$pid");
+        powerShellAyn.commandWriter.println("$pid");
         String commandOutput = reader.readLine().replaceAll("\\D", "");
         if ("65001".equals(commandOutput) || "936".equals(commandOutput) || "437".equals(commandOutput))
             commandOutput = reader.readLine().replaceAll("\\D", "");
@@ -48,7 +48,7 @@ class PowerShellCommandProcessor implements Runnable {
             readData();
         } catch (IOException e) {
             logger.warning("Unexpected error reading PowerShell output , Process suicide ");
-            powerShell.close();
+            powerShellAyn.close();
         } catch (Exception e) {
             if (baseTime == null) {
                 baseTime = LocalDateTime.now();

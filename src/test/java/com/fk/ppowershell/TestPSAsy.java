@@ -7,26 +7,26 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.HashMap;
 
-public class TestPS {
-    static PowerShell powerShell;
+public class TestPSAsy {
+    static PowerShellAyn powerShellAsy;
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
         System.out.println("BeforeClass");
-        powerShell = PowerShell.openProcess();
+        powerShellAsy = PowerShellAyn.openProcess();
     }
 
     @AfterClass
     public static void tearDownAfterClass() {
         System.out.println("AfterClass");
-        powerShell.close();
+        powerShellAsy.close();
     }
 
     @Test
     public void testListDir() throws IOException {
         HashMap<String, String> head = new HashMap<>();
         head.put("testListDir","testListDir");
-        powerShell.executeScript(head,"dir");
+        powerShellAsy.executeScript(head,"dir c:/");
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
@@ -38,7 +38,7 @@ public class TestPS {
     public void testListProcesses() throws IOException {
         HashMap<String, String> head = new HashMap<>();
         head.put("testListProcesses","testListProcesses");
-        powerShell.executeScript(head,"Get-Process");
+        powerShellAsy.executeScript(head,"Get-Process");
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
@@ -48,7 +48,7 @@ public class TestPS {
 
     @Test
     public void testCheckBIOSByWMI() throws IOException {
-        powerShell.executeScript("Get-WmiObject Win32_BIOS");
+        powerShellAsy.executeScript("Get-WmiObject Win32_BIOS");
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
@@ -58,7 +58,7 @@ public class TestPS {
 
     @Test
     public void testCheckEmptyResponse() throws IOException {
-        powerShell.executeScript("Get-WmiObject Win32_1394Controller");
+        powerShellAsy.executeScript("Get-WmiObject Win32_1394Controller");
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
@@ -68,7 +68,7 @@ public class TestPS {
 
     @Test
     public void testErrorCase() throws IOException {
-        powerShell.executeScript("sfdsfdsf");
+        powerShellAsy.executeScript("sfdsfdsf");
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
@@ -78,9 +78,9 @@ public class TestPS {
 
     @Test
     public void testMultipleCalls() throws IOException {
-        powerShell.executeScript("dir");
-        powerShell.executeScript("Get-Process");
-        powerShell.executeScript("Get-WmiObject Win32_BIOS");
+        powerShellAsy.executeScript("dir");
+        powerShellAsy.executeScript("Get-Process");
+        powerShellAsy.executeScript("Get-WmiObject Win32_BIOS");
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {

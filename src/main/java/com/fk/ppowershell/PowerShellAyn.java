@@ -15,24 +15,24 @@ import java.util.logging.Logger;
 import static com.fk.ppowershell.Constant.END_SCRIPT_STRING;
 import static com.fk.ppowershell.Constant.START_SCRIPT_STRING;
 
-public class PowerShell implements AutoCloseable {
+public class PowerShellAyn implements AutoCloseable {
     //Declare logger
-    private static final Logger logger = Logger.getLogger(PowerShell.class.getName());
-    // Process to store PowerShell process
+    private static final Logger logger = Logger.getLogger(PowerShellAyn.class.getName());
+    //Process to store PowerShell process
     private Process p;
     //PID of the process
     long pid = -1;
-    // Writer to send commands
+    //Writer to send commands
     PrintWriter commandWriter;
     //process state
     private boolean closed = false;
-    // Config values
+    //Config values
     private Integer startProcessWaitTime = 1;
     private Boolean isAsync = false;
     private Map<String, Map<String, String>> headCache;
     private Integer headCacheInitialCapacity;
     private File tempFolder;
-    private PowerShell() {
+    private PowerShellAyn() {
     }
 
     Process getP() {
@@ -58,11 +58,11 @@ public class PowerShell implements AutoCloseable {
         }
     }
 
-    public static PowerShell openProcess() throws IOException {
+    public static PowerShellAyn openProcess() throws IOException {
         return openProcess(null, () -> new OperationService[]{});
     }
 
-    public static PowerShell openProcess(Supplier<OperationService[]> supplier) throws IOException {
+    public static PowerShellAyn openProcess(Supplier<OperationService[]> supplier) throws IOException {
         return openProcess(null, supplier);
     }
 
@@ -73,20 +73,20 @@ public class PowerShell implements AutoCloseable {
      * @param supplier         Specifies the implementation class that handles output support
      * @return PowerShell process
      */
-    public static PowerShell openProcess(String pSExecutablePath, Supplier<OperationService[]> supplier) throws IOException {
-        PowerShell powerShell = new PowerShell();
-        powerShell.configuration(null);
+    public static PowerShellAyn openProcess(String pSExecutablePath, Supplier<OperationService[]> supplier) throws IOException {
+        PowerShellAyn powerShellAyn = new PowerShellAyn();
+        powerShellAyn.configuration(null);
         String executablePath = pSExecutablePath != null && pSExecutablePath.length() > 0 ? pSExecutablePath : Constant.IS_WINDOWS ? "powershell.exe" : "pwsh.exe";
-        PowerShell initialize = powerShell.initialize(executablePath);
+        PowerShellAyn initialize = powerShellAyn.initialize(executablePath);
         OperationServiceManager.loadOperationServiceImpl(supplier.get());
         return initialize;
     }
 
-    public static PowerShell openProcess(String pSExecutablePath) throws IOException {
+    public static PowerShellAyn openProcess(String pSExecutablePath) throws IOException {
         return openProcess(pSExecutablePath, () -> new OperationService[]{});
     }
 
-    private PowerShell initialize(String pSExecutePath) throws IOException {
+    private PowerShellAyn initialize(String pSExecutePath) throws IOException {
         String codePage = PowerShellCodepage.getIdentifierByCodePageName(Charset.defaultCharset().name());
         //Start powershell executable in process
         ProcessBuilder pb;
@@ -112,7 +112,7 @@ public class PowerShell implements AutoCloseable {
         //Getting processes from the PowerShell environment
         headCache = new ConcurrentHashMap<>(headCacheInitialCapacity);
         //Start the powershell processor
-        new Thread(new PowerShellCommandProcessor(this, isAsync, headCache)).start();
+        new Thread(new PowerShellCommandProcessorAsy(this, isAsync, headCache)).start();
         //Get and store the PID of the process
         return this;
     }
