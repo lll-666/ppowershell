@@ -101,11 +101,11 @@ public class PowerShellAyn implements AutoCloseable {
         try {
             p = pb.start();
             if (p.waitFor(startProcessWaitTime, TimeUnit.SECONDS) && !p.isAlive()) {
-                throw new PowerShellNotAvailableException("Cannot execute PowerShell. Please make sure that it is installed in your system. Errorcode:" + p.exitValue());
+                throw new PowerShellException("Cannot execute PowerShell. Please make sure that it is installed in your system. Errorcode:" + p.exitValue());
             }
         } catch (IOException | InterruptedException ex) {
             Thread.currentThread().interrupt();
-            throw new PowerShellNotAvailableException("Cannot execute PowerShell. Please make sure that it is installed in your system", ex);
+            throw new PowerShellException("Cannot execute PowerShell. Please make sure that it is installed in your system", ex);
         }
 
         this.commandWriter = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);

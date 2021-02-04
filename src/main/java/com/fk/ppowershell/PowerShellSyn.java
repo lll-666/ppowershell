@@ -41,7 +41,7 @@ public class PowerShellSyn implements AutoCloseable {
         }
     }
 
-    public static PowerShellSyn openProcess() throws PowerShellNotAvailableException {
+    public static PowerShellSyn openProcess() throws PowerShellException {
         return openProcess(null);
     }
 
@@ -63,7 +63,7 @@ public class PowerShellSyn implements AutoCloseable {
     }
 
     // Initializes PowerShell console in which we will enter the commands
-    private PowerShellSyn initialize(String powerShellExecutablePath) throws PowerShellNotAvailableException {
+    private PowerShellSyn initialize(String powerShellExecutablePath) throws PowerShellException {
         String codePage = PowerShellCodepage.getIdentifierByCodePageName(Charset.defaultCharset().name());
         ProcessBuilder pb;
 
@@ -81,13 +81,13 @@ public class PowerShellSyn implements AutoCloseable {
             //Launch process
             p = pb.start();
             if (p.waitFor(startProcessWaitTime, TimeUnit.SECONDS) && !p.isAlive()) {
-                throw new PowerShellNotAvailableException("Cannot execute PowerShell. Please make sure that it is installed in your system. Errorcode:" + p.exitValue());
+                throw new PowerShellException("Cannot execute PowerShell. Please make sure that it is installed in your system. Errorcode:" + p.exitValue());
             }
         } catch (IOException ex) {
-            throw new PowerShellNotAvailableException("Cannot execute PowerShell. Please make sure that it is installed in your system", ex);
+            throw new PowerShellException("Cannot execute PowerShell. Please make sure that it is installed in your system", ex);
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            throw new PowerShellNotAvailableException("Cannot execute PowerShell. Please make sure that it is installed in your system", ex);
+            throw new PowerShellException("Cannot execute PowerShell. Please make sure that it is installed in your system", ex);
         }
 
         //Prepare writer that will be used to send commands to powershell
@@ -117,7 +117,7 @@ public class PowerShellSyn implements AutoCloseable {
 
         try (PowerShellSyn session = PowerShellSyn.openProcess()) {
             response = session.executeCommand(command, false);
-        } catch (PowerShellNotAvailableException ex) {
+        } catch (PowerShellException ex) {
             log.log(Level.SEVERE, "PowerShell not available", ex);
         }
 

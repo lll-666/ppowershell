@@ -163,22 +163,10 @@ class PowerShellCodepage {
         codePages.put("65001", "utf-8");
     }
 
-    /**
-     * Get the encoding value from CodePage
-     *
-     * @param cpIdentifier encoding value
-     * @return String The codepage name
-     */
     public static String getCodePageNameByIdetifier(String cpIdentifier) {
         return codePages.get(cpIdentifier);
     }
 
-    /**
-     * Get the CodePage code from encoding value
-     *
-     * @param cpName the codepage name
-     * @return String the identifier
-     */
     public static String getIdentifierByCodePageName(String cpName) {
         if (cpName != null) {
             for (Entry<String, String> codePage : codePages.entrySet()) {
@@ -187,7 +175,6 @@ class PowerShellCodepage {
                 }
             }
         }
-        //Default UTF-8
         return "65001";
     }
 }

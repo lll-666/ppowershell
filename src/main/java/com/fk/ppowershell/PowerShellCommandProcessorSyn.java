@@ -30,7 +30,7 @@ class PowerShellCommandProcessorSyn {
                 return Integer.parseInt(commandOutput);
             }
         } catch (IOException e) {
-            throw new PowerShellNotAvailableException("", e);
+            throw new PowerShellException("", e);
         }
         return -1;
     }
