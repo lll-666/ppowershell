@@ -2,10 +2,10 @@ package com.fk.ppowershell;
 
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.logging.Level;
@@ -43,7 +43,7 @@ class PowerShellCommandProcessor implements Runnable {
         return -1;
     }
 
-    public void run(){
+    public void run() {
         try {
             readData();
         } catch (IOException e) {
@@ -109,9 +109,9 @@ class PowerShellCommandProcessor implements Runnable {
 
     private void deleteTmpFile(String headFlag) {
         try {
-            Files.delete(Path.of(headFlag));
+            Files.delete(new File(headFlag).toPath());
         } catch (IOException e) {
-            logger.info("Failed to delete file " + headFlag + ", Eat the exception and continue the current program");
+            logger.log(Level.WARNING, "Failed to delete file {0}, Eat the exception and continue the current program", headFlag);
         }
     }
 
