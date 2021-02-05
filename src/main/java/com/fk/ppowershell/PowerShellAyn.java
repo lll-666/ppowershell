@@ -17,7 +17,7 @@ import static com.fk.ppowershell.Constant.START_SCRIPT_STRING;
 
 public class PowerShellAyn implements AutoCloseable {
     //Declare logger
-    private static final Logger logger = Logger.getLogger(PowerShellAyn.class.getName());
+    private static final Logger log = Logger.getLogger(PowerShellAyn.class.getName());
     //Process to store PowerShell process
     private Process p;
     //PID of the process
@@ -32,6 +32,7 @@ public class PowerShellAyn implements AutoCloseable {
     private Map<String, Map<String, String>> headCache;
     private Integer headCacheInitialCapacity;
     private File tempFolder;
+
     private PowerShellAyn() {
     }
 
@@ -54,7 +55,7 @@ public class PowerShellAyn implements AutoCloseable {
             this.startProcessWaitTime = Integer.parseInt(config.get(Constant.START_PROCESS_WAIT_TIME) != null ? config.get(Constant.START_PROCESS_WAIT_TIME)
                     : properties.getProperty(Constant.START_PROCESS_WAIT_TIME));
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Could not read configuration. Using default values . the reason is {0}", e.getMessage());
+            log.log(Level.WARNING, "Could not read configuration. Using default values . the reason is {0}", e.getMessage());
         }
     }
 
@@ -135,7 +136,7 @@ public class PowerShellAyn implements AutoCloseable {
                 return;
             }
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "Exception creating temporary file", e);
+            log.log(Level.SEVERE, "Exception creating temporary file", e);
             return;
         }
 
@@ -161,7 +162,7 @@ public class PowerShellAyn implements AutoCloseable {
             }
             tmpWriter.write('"' + END_SCRIPT_STRING + '"');
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "Unexpected error while writing temporary PowerShell script", e);
+            log.log(Level.SEVERE, "Unexpected error while writing temporary PowerShell script", e);
             return;
         }
 
@@ -178,12 +179,12 @@ public class PowerShellAyn implements AutoCloseable {
             try {
                 commandWriter.println("exit");
                 if (this.pid > 0) {
-                    logger.log(Level.INFO, "Forcing PowerShell to close. PID: {0}", this.pid);
+                    log.log(Level.INFO, "Forcing PowerShell to close. PID: {0}", this.pid);
                     try {
                         Runtime.getRuntime().exec("taskkill.exe /PID " + pid + " /F /T");
                         this.closed = true;
                     } catch (IOException e) {
-                        logger.log(Level.SEVERE, "Unexpected error while killing powershell process", e);
+                        log.log(Level.SEVERE, "Unexpected error while killing powershell process", e);
                     }
                 }
             } finally {
@@ -193,7 +194,7 @@ public class PowerShellAyn implements AutoCloseable {
                         p.getInputStream().close();
                     }
                 } catch (IOException ex) {
-                    logger.log(Level.SEVERE, "Unexpected error when when closing streams", ex);
+                    log.log(Level.SEVERE, "Unexpected error when when closing streams", ex);
                 }
                 this.closed = true;
             }

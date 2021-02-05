@@ -4,7 +4,9 @@ package com.fk.ppowershell;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,15 +29,21 @@ public class PowerShellSyn implements AutoCloseable {
     //Default PowerShell executable path
     private static final String DEFAULT_WIN_EXECUTABLE = "powershell.exe";
     private static final String DEFAULT_LINUX_EXECUTABLE = "powershell";
-    private static final String TEMP_FOLDER = "tempFolder";
     private File tempFolder = null;
+
     private PowerShellSyn() {
     }
 
     public void configuration(Map<String, String> config) {
         try {
-            this.tempFolder = (config != null && config.get(TEMP_FOLDER) != null) ? getTempFolder(config.get(TEMP_FOLDER))
-                    : getTempFolder(PowerShellConfig.getConfig().getProperty(TEMP_FOLDER));
+            if (config == null) {
+                config = new HashMap<>();
+            }
+            Properties properties = PowerShellConfig.getConfig();
+            this.tempFolder = config.get(Constant.TEMP_FOLDER) != null ? getTempFolder(config.get(Constant.TEMP_FOLDER))
+                    : getTempFolder(properties.getProperty(Constant.TEMP_FOLDER));
+            this.startProcessWaitTime = Integer.parseInt(config.get(Constant.START_PROCESS_WAIT_TIME) != null ? config.get(Constant.START_PROCESS_WAIT_TIME)
+                    : properties.getProperty(Constant.START_PROCESS_WAIT_TIME));
         } catch (Exception nfe) {
             log.log(Level.SEVERE, "Could not read configuration. Using default values.", nfe);
         }
@@ -57,7 +65,7 @@ public class PowerShellSyn implements AutoCloseable {
             if (powerShell != null) {
                 powerShell.close();
             }
-            log.log(Level.WARNING, "initalize powerShell failed ");
+            log.log(Level.WARNING, "initialize powerShell failed ");
             throw e;
         }
     }
@@ -144,6 +152,7 @@ public class PowerShellSyn implements AutoCloseable {
             return "IO error reading: " + scriptPath;
         }
     }
+
     public String executeScriptText(String script) {
         return executeScriptText(script, "");
     }
@@ -175,8 +184,8 @@ public class PowerShellSyn implements AutoCloseable {
             return "Unexpected error while writing temporary PowerShell script";
         }
 
-        //3.
-        return executeCommand(tmpFile.getAbsolutePath(),true);
+        //3. Write commands to the PowerShell process And Return process output
+        return executeCommand(tmpFile.getAbsolutePath(), true);
     }
 
     @Override
@@ -186,12 +195,12 @@ public class PowerShellSyn implements AutoCloseable {
                 commandWriter.println("exit");
                 if (this.pid > 0) {
                     //If it can be closed, force kill the process
-                    Logger.getLogger(PowerShellAyn.class.getName()).log(Level.SEVERE, "Forcing PowerShell to close. PID: " + this.pid);
+                    log.log(Level.SEVERE, "Forcing PowerShell to close. PID: " + this.pid);
                     try {
                         Runtime.getRuntime().exec("taskkill.exe /PID " + pid + " /F /T");
                         this.closed = true;
                     } catch (IOException e) {
-                        Logger.getLogger(PowerShellAyn.class.getName()).log(Level.SEVERE, "Unexpected error while killing powershell process", e);
+                        log.log(Level.SEVERE, "Unexpected error while killing powershell process", e);
                     }
                 }
             } catch (Exception ex) {
