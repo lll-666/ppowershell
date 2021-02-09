@@ -58,9 +58,6 @@ class PowerShellCommandProcessorSyn {
             }
         }else{
             while (null != (line = this.reader.readLine())) {
-                if (line.equals(Constant.END_SCRIPT_STRING)) {
-                    break;
-                }
                 powerShellOutput.append(line).append(CRLF);
                 if (!canContinueReading()) {
                     break;
