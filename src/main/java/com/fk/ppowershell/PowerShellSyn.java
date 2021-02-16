@@ -188,10 +188,7 @@ public class PowerShellSyn implements AutoCloseable {
     }
 
     public PSResponse executeScriptText(String script) {
-        log.info(Thread.currentThread().getName() + "=" + script);
-        PSResponse psResponse = executeScriptText(script, "");
-        log.info(Thread.currentThread().getName() + "=" + psResponse.toString());
-        return psResponse;
+        return executeScriptText(script, "");
     }
 
     public PSResponse executeScriptText(String script, String params) {
