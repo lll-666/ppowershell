@@ -1,6 +1,8 @@
 package com.fk.ppowershell;
 
 public interface Constant {
+    String DEFAULT_WIN_EXECUTABLE = "powershell.exe";
+    String DEFAULT_LINUX_EXECUTABLE = "pwsh";
     String TEMP_FOLDER = "tempFolder";
     String IS_ASYNC = "isAsync";
     String MAX_WAIT_TIME = "maxWaitTime";
