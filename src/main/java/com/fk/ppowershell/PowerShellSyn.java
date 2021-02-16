@@ -7,9 +7,14 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static com.fk.ppowershell.Constant.END_SCRIPT_STRING;
 import static com.fk.ppowershell.Constant.IS_WINDOWS;
@@ -30,6 +35,9 @@ public class PowerShellSyn implements AutoCloseable {
     private static final String DEFAULT_WIN_EXECUTABLE = "powershell.exe";
     private static final String DEFAULT_LINUX_EXECUTABLE = "powershell";
     private File tempFolder = null;
+    private boolean isAddLock = false;
+    private int maxWaitTime = 3;
+    private final ReentrantLock lock = new ReentrantLock(true);
 
     private PowerShellSyn() {
     }
@@ -40,12 +48,13 @@ public class PowerShellSyn implements AutoCloseable {
                 config = new HashMap<>();
             }
             Properties properties = PowerShellConfig.getConfig();
-            this.tempFolder = config.get(Constant.TEMP_FOLDER) != null ? getTempFolder(config.get(Constant.TEMP_FOLDER))
-                    : getTempFolder(properties.getProperty(Constant.TEMP_FOLDER));
+            this.tempFolder = config.get(Constant.TEMP_FOLDER) != null ? getTempFolder(config.get(Constant.TEMP_FOLDER)) : getTempFolder(properties.getProperty(Constant.TEMP_FOLDER));
+            this.maxWaitTime = Integer.parseInt(config.get(Constant.MAX_WAIT_TIME) != null ? config.get(Constant.MAX_WAIT_TIME) : properties.getProperty(Constant.MAX_WAIT_TIME));
+            this.isAddLock = Boolean.parseBoolean(config.get(Constant.IS_ADD_LOCK) != null ? config.get(Constant.IS_ADD_LOCK) : properties.getProperty(Constant.IS_ADD_LOCK));
             this.startProcessWaitTime = Integer.parseInt(config.get(Constant.START_PROCESS_WAIT_TIME) != null ? config.get(Constant.START_PROCESS_WAIT_TIME)
                     : properties.getProperty(Constant.START_PROCESS_WAIT_TIME));
         } catch (Exception nfe) {
-            log.log(Level.SEVERE, "Could not read configuration. Using default values.", nfe);
+            log.log(Level.WARNING, "Could not read configuration. Using default values.", nfe);
         }
     }
 
@@ -71,7 +80,7 @@ public class PowerShellSyn implements AutoCloseable {
     }
 
     // Initializes PowerShell console in which we will enter the commands
-    private PowerShellSyn initialize(String powerShellExecutablePath) throws PowerShellException {
+    private PowerShellSyn initialize(String powerShellExecutablePath) {
         String codePage = PowerShellCodepage.getIdentifierByCodePageName(Charset.defaultCharset().name());
         ProcessBuilder pb;
 
@@ -105,69 +114,97 @@ public class PowerShellSyn implements AutoCloseable {
     }
 
 
-    private String executeCommand(String command, boolean iScriptMode) {
+    private PSResponse executeCommand(String command, boolean iScriptMode) {
         checkState();
         String commandOutput = "";
         long commandStart = System.currentTimeMillis();
-        try {
-            commandWriter.println(command);
-            commandOutput = this.processor.process(iScriptMode);
-            long commandEnd = System.currentTimeMillis();
-            log.log(Level.INFO, "execution time is {0} ms", commandEnd - commandStart);
-        } catch (Exception ex) {
-            log.log(Level.SEVERE, "Unexpected error when processing PowerShell command", ex);
+        if (isAddLock) {
+            try {
+                if (!lock.tryLock(maxWaitTime, TimeUnit.SECONDS)) {
+                    return new PSResponse(true, "no lock obtained");
+                }
+                try {
+                    commandOutput = execute(command, iScriptMode);
+                } catch (Exception e) {
+                    log.log(Level.WARNING, "Unexpected error when processing PowerShell command", e);
+                    return new PSResponse(true, "Unexpected error when processing PowerShell command");
+                } finally {
+                    lock.unlock();
+                }
+            } catch (InterruptedException e) {
+                log.warning("Interrupt blocking ! Restore interrupted state");
+                Thread.currentThread().interrupt();
+                return new PSResponse(true, "Interrupt blocking ! Restore interrupted state");
+            }
+        } else {
+            commandOutput = execute(command, iScriptMode);
         }
-        return commandOutput;
+
+        long commandEnd = System.currentTimeMillis();
+        log.log(Level.INFO, "execution time is {0} ms", commandEnd - commandStart);
+        return new PSResponse(commandOutput);
     }
 
-    public static String executeSingleCommand(String command) {
-        String response = null;
+    private String execute(String command, boolean iScriptMode) {
+        commandWriter.println(command);
+        return this.processor.process(iScriptMode);
+    }
 
-        try (PowerShellSyn session = PowerShellSyn.openProcess()) {
-            response = session.executeCommand(command, false);
+    /**
+     * Used to execute a single singleCommand only
+     * If there are multiple commands, only the output of the first singleCommand is output
+     * @param singleCommand Atomic command
+     * @return Command output
+     */
+    public static PSResponse executeSingleCommand(String singleCommand) {
+        try (PowerShellSyn process = PowerShellSyn.openProcess()) {
+            return CompletableFuture.supplyAsync(() -> process.executeCommand(singleCommand, false)).get(process.maxWaitTime, TimeUnit.SECONDS);
         } catch (PowerShellException ex) {
-            log.log(Level.SEVERE, "PowerShell not available", ex);
+            return new PSResponse(true, "PowerShell execute business exception");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return new PSResponse(true, "PowerShell interrupt exception");
+        } catch (ExecutionException e) {
+            return new PSResponse(true, "PowerShell execute script exception");
+        } catch (TimeoutException e) {
+            return new PSResponse(true);
         }
-
-        return response;
     }
 
-
-    public boolean isLastCommandInError() {
-        return !Boolean.parseBoolean(executeCommand("$?", false));
-    }
-
-    public String executeScriptFile(String scriptPath) {
+    public PSResponse executeScriptFile(String scriptPath) {
         return executeScriptFile(scriptPath, "");
     }
 
-    public String executeScriptFile(String scriptPath, String params) {
-        try (BufferedReader srcReader = new BufferedReader(new FileReader(new File(scriptPath)))) {
-            return executeScriptText(srcReader.lines().toString(), params);
+    public PSResponse executeScriptFile(String scriptPath, String params) {
+        try (BufferedReader srcReader = new BufferedReader(new FileReader(scriptPath))) {
+            return executeScriptText(srcReader.lines().collect(Collectors.joining(";")), params);
         } catch (FileNotFoundException fnfex) {
             log.log(Level.SEVERE, "Unexpected error when processing PowerShell script: file not found", fnfex);
-            return "Wrong script path: ";
+            return new PSResponse(true, "Wrong script path: ");
         } catch (IOException ioe) {
             log.log(Level.SEVERE, "Unexpected error when processing PowerShell script", ioe);
-            return "IO error reading: " + scriptPath;
+            return new PSResponse(true, "IO error reading: " + scriptPath);
         }
     }
 
-    public String executeScriptText(String script) {
-        return executeScriptText(script, "");
+    public PSResponse executeScriptText(String script) {
+        log.info(Thread.currentThread().getName() + "=" + script);
+        PSResponse psResponse = executeScriptText(script, "");
+        log.info(Thread.currentThread().getName() + "=" + psResponse.toString());
+        return psResponse;
     }
 
-    public String executeScriptText(String script, String params) {
+    public PSResponse executeScriptText(String script, String params) {
         //1. Create temporary file
         File tmpFile;
         try {
             tmpFile = File.createTempFile("psscript_" + new Date().getTime(), ".ps1", this.tempFolder);
             if (!tmpFile.exists()) {
-                return "temporary is not exist";
+                return new PSResponse(true, "temporary is not exist");
             }
         } catch (IOException e) {
             log.log(Level.SEVERE, "Exception creating temporary file", e);
-            return "Exception creating temporary file";
+            return new PSResponse(true, "Exception creating temporary file");
         }
 
         //2. Writing scripts to temporary files
@@ -180,12 +217,17 @@ public class PowerShellSyn implements AutoCloseable {
             }
             tmpWriter.write('"' + END_SCRIPT_STRING + '"');
         } catch (IOException e) {
-            log.log(Level.SEVERE, "Unexpected error while writing temporary PowerShell script", e);
-            return "Unexpected error while writing temporary PowerShell script";
+            log.log(Level.WARNING, "Unexpected error while writing temporary PowerShell script", e);
+            return new PSResponse(true, "Unexpected error while writing temporary PowerShell script");
         }
 
         //3. Write commands to the PowerShell process And Return process output
-        return executeCommand(tmpFile.getAbsolutePath(), true);
+        PSResponse psResponse = executeCommand(tmpFile.getAbsolutePath() + " " + params, true);
+
+        //4.delete tmpFile
+        if(!tmpFile.delete()){log.warning("file delete failed");}
+
+        return psResponse;
     }
 
     @Override

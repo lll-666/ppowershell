@@ -3,6 +3,8 @@ package com.fk.ppowershell;
 public interface Constant {
     String TEMP_FOLDER = "tempFolder";
     String IS_ASYNC = "isAsync";
+    String MAX_WAIT_TIME = "maxWaitTime";
+    String IS_ADD_LOCK = "isAddLock";
     String HEAD_CACHE_INITIAL_CAPACITY = "headCacheInitialCapacity";
     String START_PROCESS_WAIT_TIME = "startProcessWaitTime";
     boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");

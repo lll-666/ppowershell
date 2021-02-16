@@ -1,5 +1,5 @@
 package com.fk.ppowershell;
-public class PowerShellException extends RuntimeException {
+class PowerShellException extends RuntimeException {
 
     PowerShellException(String message) {
         super(message);
