@@ -23,7 +23,7 @@ public class TestPSAsy {
     }
 
     @Test
-    public void testListDir() throws IOException {
+    public void testListDir() {
         HashMap<String, String> head = new HashMap<>();
         head.put("testListDir","testListDir");
         powerShellAsy.executeScript(head,"dir c:/");
@@ -35,7 +35,7 @@ public class TestPSAsy {
     }
 
     @Test
-    public void testListProcesses() throws IOException {
+    public void testListProcesses() {
         HashMap<String, String> head = new HashMap<>();
         head.put("testListProcesses","testListProcesses");
         powerShellAsy.executeScript(head,"Get-Process");
@@ -47,7 +47,7 @@ public class TestPSAsy {
     }
 
     @Test
-    public void testCheckBIOSByWMI() throws IOException {
+    public void testCheckBIOSByWMI() {
         powerShellAsy.executeScript("Get-WmiObject Win32_BIOS");
         try {
             Thread.sleep(1000);
@@ -57,7 +57,7 @@ public class TestPSAsy {
     }
 
     @Test
-    public void testCheckEmptyResponse() throws IOException {
+    public void testCheckEmptyResponse() {
         powerShellAsy.executeScript("Get-WmiObject Win32_1394Controller");
         try {
             Thread.sleep(1000);
@@ -67,7 +67,7 @@ public class TestPSAsy {
     }
 
     @Test
-    public void testErrorCase() throws IOException {
+    public void testErrorCase() {
         powerShellAsy.executeScript("sfdsfdsf");
         try {
             Thread.sleep(1000);
@@ -77,7 +77,7 @@ public class TestPSAsy {
     }
 
     @Test
-    public void testMultipleCalls() throws IOException {
+    public void testMultipleCalls() {
         powerShellAsy.executeScript("dir");
         powerShellAsy.executeScript("Get-Process");
         powerShellAsy.executeScript("Get-WmiObject Win32_BIOS");
