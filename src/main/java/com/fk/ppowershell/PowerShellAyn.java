@@ -12,9 +12,7 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.fk.ppowershell.Constant.END_SCRIPT_STRING;
-import static com.fk.ppowershell.Constant.START_SCRIPT_STRING;
-
+import static com.fk.ppowershell.Constant.*;
 public class PowerShellAyn implements AutoCloseable {
     //Declare logger
     private static final Logger log = Logger.getLogger(PowerShellAyn.class.getName());
@@ -46,14 +44,14 @@ public class PowerShellAyn implements AutoCloseable {
                 config = new HashMap<>();
             }
             Properties properties = PowerShellConfig.getConfig();
-            this.tempFolder = config.get(Constant.TEMP_FOLDER) != null ? getTempFolder(config.get(Constant.TEMP_FOLDER))
-                    : getTempFolder(properties.getProperty(Constant.TEMP_FOLDER));
-            this.isAsync = Boolean.parseBoolean(config.get(Constant.IS_ASYNC) != null ? config.get(Constant.IS_ASYNC)
-                    : properties.getProperty(Constant.IS_ASYNC));
-            this.headCacheInitialCapacity = Integer.parseInt((config.get(Constant.HEAD_CACHE_INITIAL_CAPACITY)) != null ? config.get(Constant.HEAD_CACHE_INITIAL_CAPACITY)
-                    : properties.getProperty(Constant.HEAD_CACHE_INITIAL_CAPACITY));
-            this.startProcessWaitTime = Integer.parseInt(config.get(Constant.START_PROCESS_WAIT_TIME) != null ? config.get(Constant.START_PROCESS_WAIT_TIME)
-                    : properties.getProperty(Constant.START_PROCESS_WAIT_TIME));
+            this.tempFolder = config.get(TEMP_FOLDER) != null ? getTempFolder(config.get(TEMP_FOLDER))
+                    : getTempFolder(properties.getProperty(TEMP_FOLDER));
+            this.isAsync = Boolean.parseBoolean(config.get(IS_ASYNC) != null ? config.get(IS_ASYNC)
+                    : properties.getProperty(IS_ASYNC));
+            this.headCacheInitialCapacity = Integer.parseInt((config.get(HEAD_CACHE_INITIAL_CAPACITY)) != null ? config.get(HEAD_CACHE_INITIAL_CAPACITY)
+                    : properties.getProperty(HEAD_CACHE_INITIAL_CAPACITY));
+            this.startProcessWaitTime = Integer.parseInt(config.get(START_PROCESS_WAIT_TIME) != null ? config.get(START_PROCESS_WAIT_TIME)
+                    : properties.getProperty(START_PROCESS_WAIT_TIME));
         } catch (Exception e) {
             log.log(Level.WARNING, "Could not read configuration. Using default values . the reason is {0}", e.getMessage());
         }
@@ -77,7 +75,7 @@ public class PowerShellAyn implements AutoCloseable {
     public static PowerShellAyn openProcess(String pSExecutablePath, Supplier<OperationService[]> supplier) throws IOException {
         PowerShellAyn powerShellAyn = new PowerShellAyn();
         powerShellAyn.configuration(null);
-        String executablePath = pSExecutablePath != null && pSExecutablePath.length() > 0 ? pSExecutablePath : Constant.IS_WINDOWS ? "powershell.exe" : "pwsh.exe";
+        String executablePath = pSExecutablePath != null && pSExecutablePath.length() > 0 ? pSExecutablePath : IS_WINDOWS ? "powershell.exe" : "pwsh.exe";
         PowerShellAyn initialize = powerShellAyn.initialize(executablePath);
         OperationServiceManager.loadOperationServiceImpl(supplier.get());
         return initialize;
@@ -91,7 +89,7 @@ public class PowerShellAyn implements AutoCloseable {
         String codePage = PowerShellCodepage.getIdentifierByCodePageName(Charset.defaultCharset().name());
         //Start powershell executable in process
         ProcessBuilder pb;
-        if (Constant.IS_WINDOWS) {
+        if (IS_WINDOWS) {
             pb = new ProcessBuilder("cmd.exe", "/c", "chcp", codePage, ">", "NUL", "&", pSExecutePath, "-ExecutionPolicy", "Bypass", "-NoExit", "-NoProfile", "-Command", "-");
         } else {
             pb = new ProcessBuilder(pSExecutePath, "-nologo", "-noexit", "-Command", "-");

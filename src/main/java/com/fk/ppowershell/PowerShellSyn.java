@@ -15,9 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
-import static com.fk.ppowershell.Constant.END_SCRIPT_STRING;
-import static com.fk.ppowershell.Constant.IS_WINDOWS;
+import static com.fk.ppowershell.Constant.*;
 
 public class PowerShellSyn implements AutoCloseable {
     private static final Logger log = Logger.getLogger(PowerShellSyn.class.getName());
@@ -32,8 +30,6 @@ public class PowerShellSyn implements AutoCloseable {
     private boolean closed = false;
     private Integer startProcessWaitTime = 1;
     //Default PowerShell executable path
-    private static final String DEFAULT_WIN_EXECUTABLE = "powershell.exe";
-    private static final String DEFAULT_LINUX_EXECUTABLE = "powershell";
     private File tempFolder = null;
     private boolean isAddLock = false;
     private int maxWaitTime = 3;
@@ -48,11 +44,11 @@ public class PowerShellSyn implements AutoCloseable {
                 config = new HashMap<>();
             }
             Properties properties = PowerShellConfig.getConfig();
-            this.tempFolder = config.get(Constant.TEMP_FOLDER) != null ? getTempFolder(config.get(Constant.TEMP_FOLDER)) : getTempFolder(properties.getProperty(Constant.TEMP_FOLDER));
-            this.maxWaitTime = Integer.parseInt(config.get(Constant.MAX_WAIT_TIME) != null ? config.get(Constant.MAX_WAIT_TIME) : properties.getProperty(Constant.MAX_WAIT_TIME));
-            this.isAddLock = Boolean.parseBoolean(config.get(Constant.IS_ADD_LOCK) != null ? config.get(Constant.IS_ADD_LOCK) : properties.getProperty(Constant.IS_ADD_LOCK));
-            this.startProcessWaitTime = Integer.parseInt(config.get(Constant.START_PROCESS_WAIT_TIME) != null ? config.get(Constant.START_PROCESS_WAIT_TIME)
-                    : properties.getProperty(Constant.START_PROCESS_WAIT_TIME));
+            this.tempFolder = config.get(TEMP_FOLDER) != null ? getTempFolder(config.get(TEMP_FOLDER)) : getTempFolder(properties.getProperty(TEMP_FOLDER));
+            this.maxWaitTime = Integer.parseInt(config.get(MAX_WAIT_TIME) != null ? config.get(MAX_WAIT_TIME) : properties.getProperty(MAX_WAIT_TIME));
+            this.isAddLock = Boolean.parseBoolean(config.get(IS_ADD_LOCK) != null ? config.get(IS_ADD_LOCK) : properties.getProperty(IS_ADD_LOCK));
+            this.startProcessWaitTime = Integer.parseInt(config.get(START_PROCESS_WAIT_TIME) != null ? config.get(START_PROCESS_WAIT_TIME)
+                    : properties.getProperty(START_PROCESS_WAIT_TIME));
         } catch (Exception nfe) {
             log.log(Level.WARNING, "Could not read configuration. Using default values.", nfe);
         }
