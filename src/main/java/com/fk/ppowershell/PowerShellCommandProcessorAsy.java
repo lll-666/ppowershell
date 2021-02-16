@@ -69,7 +69,6 @@ class PowerShellCommandProcessorAsy implements Runnable {
     }
 
     private void readData() throws IOException {
-        waitingToReadData();
         String line;
         while (null != (line = this.reader.readLine())) {
             if (line.equals(Constant.START_SCRIPT_STRING)) {
@@ -84,7 +83,6 @@ class PowerShellCommandProcessorAsy implements Runnable {
                     }
                 }
             }
-            waitingToReadData();
         }
     }
 
@@ -112,15 +110,6 @@ class PowerShellCommandProcessorAsy implements Runnable {
             Files.delete(new File(headFlag).toPath());
         } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to delete file {0}, Eat the exception and continue the current program", headFlag);
-        }
-    }
-
-    private void waitingToReadData() throws IOException {
-        try {
-            while (!this.reader.ready()) Thread.sleep(50);
-        } catch (InterruptedException ex) {
-            logger.warning("Interrupt blocking ! , Restore interrupted state");
-            Thread.currentThread().interrupt();
         }
     }
 }
