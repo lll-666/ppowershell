@@ -72,11 +72,13 @@ class PowerShellCommandProcessorAsy implements Runnable {
         String line;
         while (null != (line = this.reader.readLine())) {
             if (line.equals(Constant.START_SCRIPT_STRING)) {
-                String headFlag = this.reader.readLine();
+                String identify = this.reader.readLine();
                 StringBuilder body = new StringBuilder();
                 while (null != (line = this.reader.readLine())) {
                     if (line.equals(Constant.END_SCRIPT_STRING)) {
-                        handCommandOutput(headFlag, body);
+                        if (identify.equals(this.reader.readLine())) {
+                            handCommandOutput(identify, body);
+                        }
                         break;
                     } else {
                         body.append(line).append(CRLF);
@@ -86,14 +88,14 @@ class PowerShellCommandProcessorAsy implements Runnable {
         }
     }
 
-    private void handCommandOutput(String headFlag, StringBuilder body) {
-        Map<String, String> head = headCache.remove(headFlag);
+    private void handCommandOutput(String identify, StringBuilder body) {
+        Map<String, String> head = headCache.remove(identify);
         if (head == null) {
-            log.log(Level.WARNING, "[{}] is not in headCache !", headFlag);
+            log.log(Level.WARNING, "[{}] is not in headCache !", identify);
             return;
         }
 
-        deleteTmpFile(head.remove(headFlag));
+        deleteTmpFile(head.remove(identify));
 
         OperationService operationService = OperationServiceManager.getOperationImpl().get(head.remove(IMPL));
         if (operationService == null) {

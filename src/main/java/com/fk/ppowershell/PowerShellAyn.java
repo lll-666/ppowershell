@@ -13,6 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.fk.ppowershell.Constant.*;
+
 public class PowerShellAyn implements AutoCloseable {
     //Declare logger
     private static final Logger log = Logger.getLogger(PowerShellAyn.class.getName());
@@ -139,32 +140,34 @@ public class PowerShellAyn implements AutoCloseable {
 
         //2. Put the temporary file absolute path in the header
         String absolutePath = tmpFile.getAbsolutePath();
-        String name = tmpFile.getName();
+        String identify = tmpFile.getName();
         if (head == null) {
             head = new HashMap<>();
         }
-        head.put(name, absolutePath);
+        head.put(identify, absolutePath);
 
         //3. Writing scripts to temporary files
         try (BufferedReader srcReader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(commandStr.getBytes())));
              BufferedWriter tmpWriter = new BufferedWriter(new FileWriter(tmpFile))) {
-            tmpWriter.write('"' + START_SCRIPT_STRING + '"');
+            tmpWriter.write(Constant.DOUBLE_QUOTE + START_SCRIPT_STRING + Constant.DOUBLE_QUOTE);
             tmpWriter.newLine();
-            tmpWriter.write('"' + name + '"');
+            tmpWriter.write(Constant.DOUBLE_QUOTE + identify + Constant.DOUBLE_QUOTE);
             tmpWriter.newLine();
             String line;
             while ((line = srcReader.readLine()) != null) {
                 tmpWriter.write(line);
                 tmpWriter.newLine();
             }
-            tmpWriter.write('"' + END_SCRIPT_STRING + '"');
+            tmpWriter.write(Constant.DOUBLE_QUOTE + END_SCRIPT_STRING + Constant.DOUBLE_QUOTE);
+            tmpWriter.newLine();
+            tmpWriter.write(Constant.DOUBLE_QUOTE + identify + Constant.DOUBLE_QUOTE);
         } catch (IOException e) {
             log.log(Level.SEVERE, "Unexpected error while writing temporary PowerShell script", e);
             return;
         }
 
-        //4. Cache the script header information and associate the file name information
-        headCache.put(name, head);
+        //4. Cache the script header information and associate the file identify information
+        headCache.put(identify, head);
 
         //5. Write commands to the PowerShell process
         executeCommand(absolutePath);

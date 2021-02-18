@@ -13,4 +13,5 @@ public interface Constant {
     String IMPL = "IMPL";
     String END_SCRIPT_STRING = "--END-JPOWERSHELL-SCRIPT--";
     String START_SCRIPT_STRING = "--START-JPOWERSHELL-SCRIPT--";
+    Character DOUBLE_QUOTE = '"';
 }
