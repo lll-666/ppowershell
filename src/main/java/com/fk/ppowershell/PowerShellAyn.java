@@ -94,7 +94,6 @@ public class PowerShellAyn implements AutoCloseable {
         } else {
             pb = new ProcessBuilder(pSExecutePath, "-nologo", "-noexit", "-Command", "-");
         }
-
         //Merge standard and error streams
         pb.redirectErrorStream(true);
         try {

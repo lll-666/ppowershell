@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 import static com.fk.ppowershell.Constant.IMPL;
 
 class PowerShellCommandProcessorAsy implements Runnable {
-    private static final Logger logger = Logger.getLogger(PowerShellCommandProcessorAsy.class.getName());
+    private static final Logger log = Logger.getLogger(PowerShellCommandProcessorAsy.class.getName());
     private static final String CRLF = "\r\n";
     private final BufferedReader reader;
     private final boolean isAsync;
@@ -47,7 +47,7 @@ class PowerShellCommandProcessorAsy implements Runnable {
         try {
             readData();
         } catch (IOException e) {
-            logger.warning("Unexpected error reading PowerShell output , Process suicide ");
+            log.warning("Unexpected error reading PowerShell output , Process suicide ");
             powerShellAyn.close();
         } catch (Exception e) {
             if (baseTime == null) {
@@ -55,15 +55,15 @@ class PowerShellCommandProcessorAsy implements Runnable {
             }
             if (baseTime.isAfter(LocalDateTime.now().minusSeconds(60))) {
                 if (++retryTimes > 10) {
-                    logger.log(Level.SEVERE, "Retry more than 10 times in 1 minute, exit execution", e);
+                    log.log(Level.SEVERE, "Retry more than 10 times in 1 minute, exit execution", e);
                     throw e;
                 }
             } else {
-                logger.info("Reset the switch for more than 1 minute");
+                log.info("Reset the switch for more than 1 minute");
                 baseTime = LocalDateTime.now();
                 retryTimes = 0;
             }
-            logger.warning("Unexpected error reading PowerShell output , Try again !");
+            log.warning("Unexpected error reading PowerShell output , Try again !");
             run();
         }
     }
@@ -89,7 +89,7 @@ class PowerShellCommandProcessorAsy implements Runnable {
     private void handCommandOutput(String headFlag, StringBuilder body) {
         Map<String, String> head = headCache.remove(headFlag);
         if (head == null) {
-            logger.log(Level.WARNING, "[{}] is not in head !", headFlag);
+            log.log(Level.WARNING, "[{}] is not in headCache !", headFlag);
             return;
         }
 
@@ -109,7 +109,7 @@ class PowerShellCommandProcessorAsy implements Runnable {
         try {
             Files.delete(new File(headFlag).toPath());
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Failed to delete file {0}, Eat the exception and continue the current program", headFlag);
+            log.log(Level.WARNING, "Failed to delete file {0}, Eat the exception and continue the current program", headFlag);
         }
     }
 }
