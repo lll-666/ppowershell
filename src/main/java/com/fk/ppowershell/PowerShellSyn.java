@@ -15,6 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
 import static com.fk.ppowershell.Constant.*;
 
 public class PowerShellSyn implements AutoCloseable {
@@ -112,21 +113,15 @@ public class PowerShellSyn implements AutoCloseable {
 
     private PSResponse executeCommand(String command, boolean iScriptMode) {
         checkState();
-        String commandOutput = "";
+        PSResponse commandOutput;
         long commandStart = System.currentTimeMillis();
         if (isAddLock) {
             try {
                 if (!lock.tryLock(maxWaitTime, TimeUnit.SECONDS)) {
                     return new PSResponse(true, "no lock obtained");
                 }
-                try {
-                    commandOutput = execute(command, iScriptMode);
-                } catch (Exception e) {
-                    log.log(Level.WARNING, "Unexpected error when processing PowerShell command", e);
-                    return new PSResponse(true, "Unexpected error when processing PowerShell command");
-                } finally {
-                    lock.unlock();
-                }
+                commandOutput = execute(command, iScriptMode);
+                lock.unlock();
             } catch (InterruptedException e) {
                 log.warning("Interrupt blocking ! Restore interrupted state");
                 Thread.currentThread().interrupt();
@@ -138,17 +133,23 @@ public class PowerShellSyn implements AutoCloseable {
 
         long commandEnd = System.currentTimeMillis();
         log.log(Level.INFO, "execution time is {0} ms", commandEnd - commandStart);
-        return new PSResponse(commandOutput);
+        return commandOutput;
     }
 
-    private String execute(String command, boolean iScriptMode) {
-        commandWriter.println(command);
-        return this.processor.process(iScriptMode);
+    private PSResponse execute(String command, boolean iScriptMode) {
+        try {
+            commandWriter.println(command);
+            return new PSResponse(this.processor.process(iScriptMode));
+        } catch (Exception e) {
+            log.log(Level.WARNING, "Unexpected error when processing PowerShell command", e);
+            return new PSResponse(true, "Unexpected error when processing PowerShell command");
+        }
     }
 
     /**
      * Used to execute a single singleCommand only
      * If there are multiple commands, only the output of the first singleCommand is output
+     *
      * @param singleCommand Atomic command
      * @return Command output
      */
@@ -218,7 +219,9 @@ public class PowerShellSyn implements AutoCloseable {
         PSResponse psResponse = executeCommand(tmpFile.getAbsolutePath() + " " + params, true);
 
         //4.delete tmpFile
-        if(!tmpFile.delete()){log.warning("file delete failed");}
+        if (!tmpFile.delete()) {
+            log.warning("file delete failed");
+        }
 
         return psResponse;
     }
