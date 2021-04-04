@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,12 +19,12 @@ class PowerShellCommandProcessorAsy implements Runnable {
     private static final String CRLF = "\r\n";
     private final BufferedReader reader;
     private final boolean isAsync;
-    private final Map<String, Map<String, String>> headCache;
+    private final LinkedList<Map<String, String>> headCache;
     private int retryTimes;
     private LocalDateTime baseTime;
     private final PowerShellAyn powerShellAyn;
 
-    public PowerShellCommandProcessorAsy(PowerShellAyn powerShellAyn, boolean isAsync, Map<String, Map<String, String>> headCache) throws IOException {
+    public PowerShellCommandProcessorAsy(PowerShellAyn powerShellAyn, boolean isAsync, LinkedList<Map<String, String>> headCache) throws IOException {
         this.isAsync = isAsync;
         this.headCache = headCache;
         this.powerShellAyn = powerShellAyn;
@@ -76,26 +77,29 @@ class PowerShellCommandProcessorAsy implements Runnable {
                 StringBuilder body = new StringBuilder();
                 while (null != (line = this.reader.readLine())) {
                     if (line.equals(Constant.END_SCRIPT_STRING)) {
-                        if (identify.equals(this.reader.readLine())) {
+                        if (identify.equals(this.reader.readLine()))
                             handCommandOutput(identify, body);
-                        }
                         break;
-                    } else {
+                    } else
                         body.append(line).append(CRLF);
-                    }
                 }
             }
         }
     }
 
     private void handCommandOutput(String identify, StringBuilder body) {
-        Map<String, String> head = headCache.remove(identify);
-        if (head == null) {
-            log.log(Level.WARNING, "[{}] is not in headCache !", identify);
-            return;
-        }
+        Map<String, String> head;
+        String filePath;
+        do {
+            head = headCache.pollFirst();
+            if (head == null) {
+                log.log(Level.WARNING, "[{}] is not in headCache !", identify);
+                return;
+            }
+            filePath = head.get(identify);
+        } while (filePath == null);
 
-        deleteTmpFile(head.remove(identify));
+        deleteTmpFile(filePath);
 
         OperationService operationService = OperationServiceManager.getOperationImpl().get(head.remove(IMPL));
         if (operationService == null) {

@@ -2,11 +2,7 @@ package com.fk.ppowershell;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -28,8 +24,7 @@ public class PowerShellAyn implements AutoCloseable {
     //Config values
     private Integer startProcessWaitTime = 1;
     private Boolean isAsync = false;
-    private Map<String, Map<String, String>> headCache;
-    private Integer headCacheInitialCapacity;
+    private final LinkedList<Map<String, String>> headCache = new LinkedList<>();
     private File tempFolder;
 
     private PowerShellAyn() {
@@ -49,8 +44,6 @@ public class PowerShellAyn implements AutoCloseable {
                     : getTempFolder(properties.getProperty(TEMP_FOLDER));
             this.isAsync = Boolean.parseBoolean(config.get(IS_ASYNC) != null ? config.get(IS_ASYNC)
                     : properties.getProperty(IS_ASYNC));
-            this.headCacheInitialCapacity = Integer.parseInt((config.get(HEAD_CACHE_INITIAL_CAPACITY)) != null ? config.get(HEAD_CACHE_INITIAL_CAPACITY)
-                    : properties.getProperty(HEAD_CACHE_INITIAL_CAPACITY));
             this.startProcessWaitTime = Integer.parseInt(config.get(START_PROCESS_WAIT_TIME) != null ? config.get(START_PROCESS_WAIT_TIME)
                     : properties.getProperty(START_PROCESS_WAIT_TIME));
         } catch (Exception e) {
@@ -108,8 +101,6 @@ public class PowerShellAyn implements AutoCloseable {
         }
 
         this.commandWriter = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);
-        //Getting processes from the PowerShell environment
-        headCache = new ConcurrentHashMap<>(headCacheInitialCapacity);
         //Start the powershell processor
         new Thread(new PowerShellCommandProcessorAsy(this, isAsync, headCache)).start();
         //Get and store the PID of the process
@@ -137,6 +128,7 @@ public class PowerShellAyn implements AutoCloseable {
             log.log(Level.SEVERE, "Exception creating temporary file", e);
             return;
         }
+
 
         //2. Put the temporary file absolute path in the header
         String absolutePath = tmpFile.getAbsolutePath();
@@ -167,7 +159,7 @@ public class PowerShellAyn implements AutoCloseable {
         }
 
         //4. Cache the script header information and associate the file identify information
-        headCache.put(identify, head);
+        headCache.add(head);
 
         //5. Write commands to the PowerShell process
         executeCommand(absolutePath);
