@@ -15,12 +15,14 @@
  */
 package com.fk.ppowershell;
 
+import com.fk.ppowershell.nonblock.PowerShellNonblocking;
+
 import java.io.IOException;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-final class PowerShellConfig {
+public final class PowerShellConfig {
     private static Properties config;
 
     public static Properties getConfig() {
@@ -31,7 +33,7 @@ final class PowerShellConfig {
                     try {
                         config.load(PowerShellConfig.class.getClassLoader().getResourceAsStream("pps.properties"));
                     } catch (IOException e) {
-                        Logger.getLogger(PowerShellAyn.class.getName()).log(Level.SEVERE, "Cannot read config values from file : pps.properties", e);
+                        Logger.getLogger(PowerShellNonblocking.class.getName()).log(Level.SEVERE, "Cannot read config values from file : pps.properties", e);
                     }
                 }
             }

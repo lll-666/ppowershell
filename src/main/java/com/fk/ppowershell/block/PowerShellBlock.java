@@ -1,5 +1,10 @@
-package com.fk.ppowershell;
+package com.fk.ppowershell.block;
 
+
+import com.fk.ppowershell.PSResponse;
+import com.fk.ppowershell.PowerShellCodepage;
+import com.fk.ppowershell.PowerShellConfig;
+import com.fk.ppowershell.PowerShellException;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -18,15 +23,19 @@ import java.util.stream.Collectors;
 
 import static com.fk.ppowershell.Constant.*;
 
-public class PowerShellSyn implements AutoCloseable {
-    private static final Logger log = Logger.getLogger(PowerShellSyn.class.getName());
+/**
+ * 业务线程A 异步向powershell进程输出命令
+ * 业务线程A 同步等待 powershell进程输出，直到进程输出完毕
+ */
+public final class PowerShellBlock implements AutoCloseable {
+    private static final Logger log = Logger.getLogger(PowerShellBlock.class.getName());
     // Process to store PowerShell session
     Process p;
     //PID of the process
     long pid = -1;
     // Writer to send commands
     PrintWriter commandWriter;
-    private PowerShellCommandProcessorSyn processor;
+    private ProcessorBlock processor;
     // Threaded session variables
     private boolean closed = false;
     private Integer startProcessWaitTime = 1;
@@ -36,7 +45,7 @@ public class PowerShellSyn implements AutoCloseable {
     private int maxWaitTime = 3;
     private final ReentrantLock lock = new ReentrantLock(true);
 
-    private PowerShellSyn() {
+    private PowerShellBlock() {
     }
 
     public void configuration(Map<String, String> config) {
@@ -55,15 +64,15 @@ public class PowerShellSyn implements AutoCloseable {
         }
     }
 
-    public static PowerShellSyn openProcess() throws PowerShellException {
+    public static PowerShellBlock openProcess() throws PowerShellException {
         return openProcess(null);
     }
 
 
-    public static PowerShellSyn openProcess(String customPowerShellExecutablePath) {
-        PowerShellSyn powerShell = null;
+    public static PowerShellBlock openProcess(String customPowerShellExecutablePath) {
+        PowerShellBlock powerShell = null;
         try {
-            powerShell = new PowerShellSyn();
+            powerShell = new PowerShellBlock();
             powerShell.configuration(null);
             String powerShellExecutablePath = customPowerShellExecutablePath == null ? (IS_WINDOWS ? DEFAULT_WIN_EXECUTABLE : DEFAULT_LINUX_EXECUTABLE) : customPowerShellExecutablePath;
             return powerShell.initialize(powerShellExecutablePath);
@@ -77,7 +86,7 @@ public class PowerShellSyn implements AutoCloseable {
     }
 
     // Initializes PowerShell console in which we will enter the commands
-    private PowerShellSyn initialize(String powerShellExecutablePath) {
+    private PowerShellBlock initialize(String powerShellExecutablePath) {
         String codePage = PowerShellCodepage.getIdentifierByCodePageName(Charset.defaultCharset().name());
         ProcessBuilder pb;
 
@@ -106,7 +115,7 @@ public class PowerShellSyn implements AutoCloseable {
 
         //Prepare writer that will be used to send commands to powershell
         this.commandWriter = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);
-        this.processor = new PowerShellCommandProcessorSyn(this);
+        this.processor = new ProcessorBlock(this);
         return this;
     }
 
@@ -120,13 +129,13 @@ public class PowerShellSyn implements AutoCloseable {
                 if (!lock.tryLock(maxWaitTime, TimeUnit.SECONDS)) {
                     return new PSResponse(true, "no lock obtained");
                 }
-                commandOutput = execute(command, iScriptMode);
-                lock.unlock();
             } catch (InterruptedException e) {
                 log.warning("Interrupt blocking ! Restore interrupted state");
                 Thread.currentThread().interrupt();
                 return new PSResponse(true, "Interrupt blocking ! Restore interrupted state");
             }
+            commandOutput = execute(command, iScriptMode);
+            lock.unlock();
         } else {
             commandOutput = execute(command, iScriptMode);
         }
@@ -154,7 +163,7 @@ public class PowerShellSyn implements AutoCloseable {
      * @return Command output
      */
     public static PSResponse executeSingleCommand(String singleCommand) {
-        try (PowerShellSyn process = PowerShellSyn.openProcess()) {
+        try (PowerShellBlock process = PowerShellBlock.openProcess()) {
             return CompletableFuture.supplyAsync(() -> process.executeCommand(singleCommand, false)).get(process.maxWaitTime, TimeUnit.SECONDS);
         } catch (PowerShellException ex) {
             return new PSResponse(true, "PowerShell execute business exception");

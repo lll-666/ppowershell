@@ -1,5 +1,7 @@
-package com.fk.ppowershell;
+package com.fk.ppowershell.nonblock;
 
+
+import com.fk.ppowershell.Constant;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -14,27 +16,27 @@ import java.util.logging.Logger;
 
 import static com.fk.ppowershell.Constant.IMPL;
 
-class PowerShellCommandProcessorAsy implements Runnable {
-    private static final Logger log = Logger.getLogger(PowerShellCommandProcessorAsy.class.getName());
+class ProcessorNonblocking implements Runnable {
+    private static final Logger log = Logger.getLogger(ProcessorNonblocking.class.getName());
     private static final String CRLF = "\r\n";
     private final BufferedReader reader;
     private final boolean isAsync;
     private final LinkedList<Map<String, String>> headCache;
     private int retryTimes;
     private LocalDateTime baseTime;
-    private final PowerShellAyn powerShellAyn;
+    private final PowerShellNonblocking powerShellNonblocking;
 
-    public PowerShellCommandProcessorAsy(PowerShellAyn powerShellAyn, boolean isAsync, LinkedList<Map<String, String>> headCache) throws IOException {
+    public ProcessorNonblocking(PowerShellNonblocking powerShellNonblocking, boolean isAsync, LinkedList<Map<String, String>> headCache) throws IOException {
         this.isAsync = isAsync;
         this.headCache = headCache;
-        this.powerShellAyn = powerShellAyn;
-        this.reader = new BufferedReader(new InputStreamReader(powerShellAyn.getP().getInputStream()));
-        powerShellAyn.pid = getPID(reader);
+        this.powerShellNonblocking = powerShellNonblocking;
+        this.reader = new BufferedReader(new InputStreamReader(powerShellNonblocking.getP().getInputStream()));
+        powerShellNonblocking.pid = getPID(reader);
     }
 
     //Use Powershell command '$PID' in order to recover the process identifier
     private int getPID(BufferedReader reader) throws IOException {
-        powerShellAyn.commandWriter.println("$pid");
+        powerShellNonblocking.commandWriter.println("$pid");
         String commandOutput = reader.readLine().replaceAll("\\D", "");
         if ("65001".equals(commandOutput) || "936".equals(commandOutput) || "437".equals(commandOutput))
             commandOutput = reader.readLine().replaceAll("\\D", "");
@@ -49,7 +51,7 @@ class PowerShellCommandProcessorAsy implements Runnable {
             readData();
         } catch (IOException e) {
             log.warning("Unexpected error reading PowerShell output , Process suicide ");
-            powerShellAyn.close();
+            powerShellNonblocking.close();
         } catch (Exception e) {
             if (baseTime == null) {
                 baseTime = LocalDateTime.now();

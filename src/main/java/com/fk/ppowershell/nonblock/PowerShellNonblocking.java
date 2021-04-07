@@ -1,4 +1,9 @@
-package com.fk.ppowershell;
+package com.fk.ppowershell.nonblock;
+
+import com.fk.ppowershell.Constant;
+import com.fk.ppowershell.PowerShellCodepage;
+import com.fk.ppowershell.PowerShellConfig;
+import com.fk.ppowershell.PowerShellException;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -10,9 +15,19 @@ import java.util.logging.Logger;
 
 import static com.fk.ppowershell.Constant.*;
 
-public class PowerShellAyn implements AutoCloseable {
+/**
+ * 1、Write commands/scripts asynchronously to the powershell process
+ * 2、A fixed thread has been monitoring the output of powershell commands or scripts
+ * 3、Asynchronous thread takes over the output to process
+ * <p>
+ * 概括：
+ * 1、业务线程X 向powershell进程中 异步 写入命令
+ * 2、有一个 固定线程F 监听powershell进程输出
+ * 3、线程F 再将输出数据托管给其他的 业务线程Y 处理
+ */
+public final class PowerShellNonblocking implements AutoCloseable {
     //Declare logger
-    private static final Logger log = Logger.getLogger(PowerShellAyn.class.getName());
+    private static final Logger log = Logger.getLogger(PowerShellNonblocking.class.getName());
     //Process to store PowerShell process
     private Process p;
     //PID of the process
@@ -27,7 +42,7 @@ public class PowerShellAyn implements AutoCloseable {
     private final LinkedList<Map<String, String>> headCache = new LinkedList<>();
     private File tempFolder;
 
-    private PowerShellAyn() {
+    private PowerShellNonblocking() {
     }
 
     Process getP() {
@@ -51,11 +66,11 @@ public class PowerShellAyn implements AutoCloseable {
         }
     }
 
-    public static PowerShellAyn openProcess() throws IOException {
+    public static PowerShellNonblocking openProcess() throws IOException {
         return openProcess(null, () -> new OperationService[]{});
     }
 
-    public static PowerShellAyn openProcess(Supplier<OperationService[]> supplier) throws IOException {
+    public static PowerShellNonblocking openProcess(Supplier<OperationService[]> supplier) throws IOException {
         return openProcess(null, supplier);
     }
 
@@ -66,20 +81,20 @@ public class PowerShellAyn implements AutoCloseable {
      * @param supplier         Specifies the implementation class that handles output support
      * @return PowerShell process
      */
-    public static PowerShellAyn openProcess(String pSExecutablePath, Supplier<OperationService[]> supplier) throws IOException {
-        PowerShellAyn powerShellAyn = new PowerShellAyn();
-        powerShellAyn.configuration(null);
+    public static PowerShellNonblocking openProcess(String pSExecutablePath, Supplier<OperationService[]> supplier) throws IOException {
+        PowerShellNonblocking powerShellNonblocking = new PowerShellNonblocking();
+        powerShellNonblocking.configuration(null);
         String executablePath = pSExecutablePath != null && pSExecutablePath.length() > 0 ? pSExecutablePath : IS_WINDOWS ? "powershell.exe" : "pwsh.exe";
-        PowerShellAyn initialize = powerShellAyn.initialize(executablePath);
+        PowerShellNonblocking initialize = powerShellNonblocking.initialize(executablePath);
         OperationServiceManager.loadOperationServiceImpl(supplier.get());
         return initialize;
     }
 
-    public static PowerShellAyn openProcess(String pSExecutablePath) throws IOException {
+    public static PowerShellNonblocking openProcess(String pSExecutablePath) throws IOException {
         return openProcess(pSExecutablePath, () -> new OperationService[]{});
     }
 
-    private PowerShellAyn initialize(String pSExecutePath) throws IOException {
+    private PowerShellNonblocking initialize(String pSExecutePath) throws IOException {
         String codePage = PowerShellCodepage.getIdentifierByCodePageName(Charset.defaultCharset().name());
         //Start powershell executable in process
         ProcessBuilder pb;
@@ -102,7 +117,7 @@ public class PowerShellAyn implements AutoCloseable {
 
         this.commandWriter = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);
         //Start the powershell processor
-        new Thread(new PowerShellCommandProcessorAsy(this, isAsync, headCache)).start();
+        new Thread(new ProcessorNonblocking(this, isAsync, headCache)).start();
         //Get and store the PID of the process
         return this;
     }

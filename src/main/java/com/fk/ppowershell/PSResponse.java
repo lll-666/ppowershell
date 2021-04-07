@@ -1,30 +1,32 @@
 package com.fk.ppowershell;
 
-class PSResponse {
+public class PSResponse {
     boolean error;
     boolean timeout;
     String outPut;
 
-    PSResponse(boolean error, boolean timeout, String outPut) {
+    public PSResponse(boolean error, boolean timeout, String outPut) {
         this.error = error;
         this.timeout = timeout;
         this.outPut = outPut;
     }
 
-    PSResponse(boolean timeout) {
+    public PSResponse(boolean timeout) {
         this.timeout = timeout;
     }
 
-    PSResponse(boolean error, String outPut) {
+    public PSResponse(boolean error, String outPut) {
         this.outPut = outPut;
         this.error = error;
     }
 
-    PSResponse(String outPut) {
+    public PSResponse(String outPut) {
         this.outPut = outPut;
     }
-    PSResponse() {
+
+    public PSResponse() {
     }
+
     public String getOutPut() {
         return outPut;
     }

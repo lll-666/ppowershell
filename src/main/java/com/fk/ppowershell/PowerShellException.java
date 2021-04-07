@@ -1,11 +1,12 @@
 package com.fk.ppowershell;
-class PowerShellException extends RuntimeException {
 
-    PowerShellException(String message) {
+public class PowerShellException extends RuntimeException {
+
+    public PowerShellException(String message) {
         super(message);
     }
 
-    PowerShellException(String message, Throwable cause) {
+    public PowerShellException(String message, Throwable cause) {
         super(message, cause);
     }
 }

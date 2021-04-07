@@ -1,5 +1,8 @@
-package com.fk.ppowershell;
+package com.fk.ppowershell.block;
 
+
+import com.fk.ppowershell.Constant;
+import com.fk.ppowershell.PowerShellException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -7,13 +10,13 @@ import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class PowerShellCommandProcessorSyn {
-    private static final Logger logger = Logger.getLogger(PowerShellCommandProcessorAsy.class.getName());
+class ProcessorBlock {
+    private static final Logger log = Logger.getLogger(ProcessorBlock.class.getName());
     private static final String CRLF = "\r\n";
-    private final PowerShellSyn powerShell;
+    private final PowerShellBlock powerShell;
     private final BufferedReader reader;
 
-    public PowerShellCommandProcessorSyn(PowerShellSyn powerShell) {
+    public ProcessorBlock(PowerShellBlock powerShell) {
         this.powerShell = powerShell;
         this.reader = new BufferedReader(new InputStreamReader(powerShell.p.getInputStream()));
         this.powerShell.pid = getPID(reader);
@@ -40,7 +43,7 @@ class PowerShellCommandProcessorSyn {
             waitingToReadData();
             return readData(iScriptMode);
         } catch (IOException ioe) {
-            Logger.getLogger(PowerShellCommandProcessorAsy.class.getName()).log(Level.SEVERE, "Unexpected error reading PowerShell output", ioe);
+            log.log(Level.SEVERE, "Unexpected error reading PowerShell output", ioe);
             return ioe.getMessage();
         }
     }
@@ -82,9 +85,9 @@ class PowerShellCommandProcessorSyn {
             Thread.sleep(50);
             return this.reader.ready();
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "", e);
+            log.log(Level.SEVERE, "", e);
         } catch (InterruptedException e) {
-            logger.log(Level.SEVERE, "", e);
+            log.log(Level.SEVERE, "", e);
             Thread.currentThread().interrupt();
         }
         return false;
@@ -94,7 +97,7 @@ class PowerShellCommandProcessorSyn {
         try {
             while (!this.reader.ready()) Thread.sleep(50);
         } catch (InterruptedException ex) {
-            logger.warning("Interrupt blocking ! , Restore interrupted state");
+            log.warning("Interrupt blocking ! , Restore interrupted state");
             Thread.currentThread().interrupt();
         }
     }
