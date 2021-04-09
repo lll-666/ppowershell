@@ -24,9 +24,9 @@ import java.util.stream.Collectors;
 import static com.fk.ppowershell.Constant.*;
 
 /**
- * 业务线程A 异步向powershell进程输出命令
- * 业务线程A 托管线程X 等待 读取powershell进程输出
- * 业务线程A 控制超时：若超出指定时间，X线程仍未读取到输出，则不再等待输出，直接返回超时
+ 业务线程A 异步向powershell进程输出命令
+ 业务线程A 托管线程X 等待 读取powershell进程输出
+ 业务线程A 控制超时：若超出指定时间，X线程仍未读取到输出，则不再等待输出，直接返回超时
  */
 public final class PowerShellControl implements AutoCloseable {
     private static final Logger log = Logger.getLogger(PowerShellControl.class.getName());

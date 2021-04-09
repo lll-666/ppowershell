@@ -2,7 +2,6 @@ package com.fk.ppowershell.nonblock;
 
 import java.util.HashMap;
 import java.util.Map;
-
 public class OperationServiceManager {
     private OperationServiceManager() {
     }

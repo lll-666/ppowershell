@@ -16,14 +16,14 @@ import java.util.logging.Logger;
 import static com.fk.ppowershell.Constant.*;
 
 /**
- * 1、Write commands/scripts asynchronously to the powershell process
- * 2、A fixed thread has been monitoring the output of powershell commands or scripts
- * 3、Asynchronous thread takes over the output to process
- * <p>
- * 概括：
- * 1、业务线程X 向powershell进程中 异步 写入命令
- * 2、有一个 固定线程F 监听powershell进程输出
- * 3、线程F 再将输出数据托管给其他的 业务线程Y 处理
+ 1、Write commands/scripts asynchronously to the powershell process
+ 2、A fixed thread has been monitoring the output of powershell commands or scripts
+ 3、Asynchronous thread takes over the output to process
+
+  概括：
+  1、业务线程X 向powershell进程中 异步 写入命令
+  2、有一个 固定线程F 监听powershell进程输出
+  3、线程F 再将输出数据托管给其他的 业务线程Y 处理
  */
 public final class PowerShellNonblocking implements AutoCloseable {
     //Declare logger

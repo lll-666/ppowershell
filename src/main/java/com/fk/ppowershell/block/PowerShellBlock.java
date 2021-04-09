@@ -22,10 +22,9 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static com.fk.ppowershell.Constant.*;
-
 /**
- * 业务线程A 异步向powershell进程输出命令
- * 业务线程A 同步等待 powershell进程输出，直到进程输出完毕
+ 业务线程A 异步向powershell进程输出命令
+ 业务线程A 同步等待 powershell进程输出，直到进程输出完毕
  */
 public final class PowerShellBlock implements AutoCloseable {
     private static final Logger log = Logger.getLogger(PowerShellBlock.class.getName());
