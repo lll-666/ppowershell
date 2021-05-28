@@ -243,7 +243,11 @@ public final class PowerShellBlock implements AutoCloseable {
                     //If it can be closed, force kill the process
                     log.log(Level.SEVERE, "Forcing PowerShell to close. PID: " + this.pid);
                     try {
-                        Runtime.getRuntime().exec("taskkill.exe /PID " + pid + " /F /T");
+                        if(IS_WINDOWS){
+                            Runtime.getRuntime().exec("taskkill.exe /PID " + pid + " /F /T");
+                        }else{
+                            Runtime.getRuntime().exec("kill -9 " + pid);
+                        }
                         this.closed = true;
                     } catch (IOException e) {
                         log.log(Level.SEVERE, "Unexpected error while killing powershell process", e);

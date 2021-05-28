@@ -188,7 +188,11 @@ public final class PowerShellNonblocking implements AutoCloseable {
                 if (this.pid > 0) {
                     log.log(Level.INFO, "Forcing PowerShell to close. PID: {0}", this.pid);
                     try {
-                        Runtime.getRuntime().exec("taskkill.exe /PID " + pid + " /F /T");
+                        if(IS_WINDOWS){
+                            Runtime.getRuntime().exec("taskkill.exe /PID " + pid + " /F /T");
+                        }else{
+                            Runtime.getRuntime().exec("kill -9 " + pid);
+                        }
                         this.closed = true;
                     } catch (IOException e) {
                         log.log(Level.SEVERE, "Unexpected error while killing powershell process", e);
